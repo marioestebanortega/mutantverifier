@@ -1,0 +1,32 @@
+service: mutant-aws-lambda-service
+#TEST
+provider:
+  name: aws
+  runtime: java8
+  region: us-east-1
+  timeout: 20
+  memorySize: 1000
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 's3:*'
+      Resource:
+        - 'arn:aws:s3:::${self:custom.myBucket}/*'
+        - !Join [ '', [ 'arn:aws:s3:::', !Ref ServerlessDeploymentBucket, '/*' ] ]
+  environment:
+    MAIN_CLASS: com.mercadolibre.mutantverifier.MutantVerifierApplication
+
+custom:
+  myBucket: mutant-aws-lambda-bucket
+
+package:
+  artifact: target/mutantlambda.jar
+
+functions:
+  mutantHttp:
+    handler: com.mercadolibre.mutantverifier.aws.MutantLambda
+    environment:
+    events:
+      - http:
+          path: /mutant
+          method: POST
